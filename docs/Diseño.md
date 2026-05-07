@@ -1095,12 +1095,3 @@ fichero `Diseño.md` dentro del directorio `docs/`:
 └── README.md
 ```
 
----
-
-## 13. Referencias
-
-- Cardona Mc'Cormick, J. F. *Ejecutor lotes*, enunciado de la
-  práctica ST0257-C2661-4677, Universidad EAFIT, 25 de septiembre de
-  2025.
-- RFC 8259 — *The JavaScript Object Notation (JSON) Data Interchange
-  Format*, IETF, 2017.
