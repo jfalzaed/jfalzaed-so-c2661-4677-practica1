@@ -198,9 +198,12 @@ static void op_ejecutar(cJSON *req) {
     }
     const char *id_prog = jid_prog->valuestring;
 
-    /* Verificar que el programa existe */
+    /* Verificar que el programa existe.
+     * §3.11.3: la lista oficial de errores del ejecutor NO incluye
+     * "programa no encontrado" (ese es de gesprog, §3.10.2). El error de
+     * ejecución del ejecutor es siempre "no se pudo ejecutar el programa". */
     cJSON *meta = read_meta(id_prog);
-    if (!meta) { send_error("programa no encontrado"); return; }
+    if (!meta) { send_error("no se pudo ejecutar el programa"); return; }
 
     /* Construir argv[] */
     char *argv_buf[MAX_ARGS];
