@@ -63,8 +63,16 @@ stop() {
         return
     fi
     echo "==> Enviando Terminar al sistema..."
-    printf '{"servicio":"ctrllt","operacion":"Terminar"}\n' > "$F_CLI_REQ" 2>/dev/null || true
-    sleep 0.5
+    # Abrir un FIFO en modo escritura bloquea si no hay lector (p.ej. ctrllt ya
+    # terminó). Lo escribimos en un subshell que matamos tras 0.5 s para que el
+    # apagado nunca se cuelgue.
+    if [ -p "$F_CLI_REQ" ]; then
+        ( printf '{"servicio":"ctrllt","operacion":"Terminar"}\n' > "$F_CLI_REQ" ) 2>/dev/null &
+        _wpid=$!
+        sleep 0.5
+        kill "$_wpid" 2>/dev/null || true
+        wait "$_wpid" 2>/dev/null || true
+    fi
     echo "==> Matando procesos restantes..."
     while read -r pid; do
         kill "$pid" 2>/dev/null || true
