@@ -12,7 +12,7 @@
  *   <aralmac>/programas/p-XXXX/meta.json — metadatos (nombre, args, env)
  *
  * Máquina de estados: Corriendo ↔ Suspendido → Terminado
- *   (Leer es válido en Suspendido)
+ *   (Leer es válido en Suspendido — self-loop "Leer" de la Figura 4 del PDF)
  */
 
 #define _POSIX_C_SOURCE 200809L
@@ -150,14 +150,14 @@ static void op_guardar(cJSON *req) {
     struct stat st;
     if (stat(exe, &st) < 0) { send_error("no se pudo guardar el programa"); return; }
     if (!(st.st_mode & S_IXUSR) && !(st.st_mode & S_IXGRP) && !(st.st_mode & S_IXOTH)) {
-        /* No es ejecutable: verificar si es script con shebang */
+        /* Sin bits de ejecución: solo se acepta si es un guión con shebang (#!).
+         * Si no se puede leer para verificarlo, se rechaza. */
         FILE *f = fopen(exe, "r");
-        if (f) {
-            char shebang[3] = {0};
-            fread(shebang, 1, 2, f); fclose(f);
-            if (shebang[0] != '#' || shebang[1] != '!') {
-                send_error("no se pudo guardar el programa"); return;
-            }
+        if (!f) { send_error("no se pudo guardar el programa"); return; }
+        char shebang[3] = {0};
+        size_t nr = fread(shebang, 1, 2, f); fclose(f);
+        if (nr < 2 || shebang[0] != '#' || shebang[1] != '!') {
+            send_error("no se pudo guardar el programa"); return;
         }
     }
 
@@ -353,7 +353,7 @@ static void run(void) {
         } else if (strcmp(op, "Terminar") == 0) {
             g_estado = ST_TERMINADO; send_ok();
         } else if (strcmp(op, "Leer") == 0) {
-            /* Leer es válido también en estado Suspendido */
+            /* Leer es válido también en estado Suspendido (self-loop Figura 4) */
             op_leer(req);
         } else if (g_estado == ST_SUSPENDIDO) {
             send_error("servicio suspendido");
